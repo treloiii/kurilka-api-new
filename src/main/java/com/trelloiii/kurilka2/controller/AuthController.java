@@ -22,6 +22,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.rememberme.InMemoryTokenRepositoryImpl;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,7 +45,8 @@ public class AuthController {
     InMemoryTokenRepositoryImpl tokenRepository;
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@RequestParam(name = "username") String username,
-                                              @RequestParam(name="password") String password) {
+                                              @RequestParam(name="password") String password,
+                                              HttpServletResponse response) {
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password));
@@ -55,7 +58,6 @@ public class AuthController {
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
-
         return ResponseEntity.ok(new JwtResponse(
                 userDetails.getUsername(),
                 jwt,
@@ -67,8 +69,10 @@ public class AuthController {
     }
 
     @PostMapping("/set_password/{id}")
-    public ResponseEntity<?> setPassword(@PathVariable String id,@RequestBody String password){
+    public ResponseEntity<?> setPassword(@PathVariable String id,
+                                         @RequestBody String password,
+                                         HttpServletResponse httpServletResponse){
         com.trelloiii.kurilka2.model.User user=registrationService.setUpPassword(id,password);
-        return authenticateUser(user.getEmail(), password);
+        return authenticateUser(user.getEmail(), password,httpServletResponse);
     }
 }

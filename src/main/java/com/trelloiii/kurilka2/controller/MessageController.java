@@ -1,8 +1,12 @@
 package com.trelloiii.kurilka2.controller;
 
+import com.fasterxml.jackson.annotation.JsonView;
+import com.trelloiii.kurilka2.model.Dialog;
 import com.trelloiii.kurilka2.model.User;
 import com.trelloiii.kurilka2.repository.UserRepository;
 import com.trelloiii.kurilka2.services.CustomUserDetailsService;
+import com.trelloiii.kurilka2.services.DialogService;
+import com.trelloiii.kurilka2.views.View;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -17,11 +21,14 @@ import java.util.stream.Stream;
 @CrossOrigin
 public class MessageController {
     @Autowired
-    CustomUserDetailsService userService;
-
+    private CustomUserDetailsService userService;
+    @Autowired
+    private DialogService dialogService;
     @GetMapping
-    public List<String> get(Principal principal){
+    @JsonView(View.MainInfo.class)
+    public List<Dialog> get(Principal principal){
         User user=userService.findByUsername(principal.getName());
-        return Stream.of("one","two","three").collect(Collectors.toList());
+        List<Dialog> dialogs= dialogService.findAllByOwner(user);
+        return dialogs;
     }
 }
