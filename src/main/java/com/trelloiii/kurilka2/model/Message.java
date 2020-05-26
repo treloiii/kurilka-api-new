@@ -15,19 +15,20 @@ public class Message {
     private Long id;
     @ManyToOne
     @JoinColumn(name = "dialog_id")
-    @JsonIgnore
-    private Dialog dialog;
     @JsonView(View.MainInfo.class)
-    private String text;
-    @JsonView(View.MainInfo.class)
-    private LocalDateTime time;
-    @ManyToOne
-    @JoinColumn(name = "owner_id")
     @JsonIdentityReference
     @JsonIdentityInfo(
             property = "id",
             generator = ObjectIdGenerators.PropertyGenerator.class
     )
+    private Dialog dialog;
+    @JsonView(View.MainInfo.class)
+    private String text;
+    @JsonView(View.MainInfo.class)
+    @JsonFormat(shape = JsonFormat.Shape.STRING,pattern = "HH:mm")
+    private LocalDateTime time;
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
     @JsonView(View.MainInfo.class)
     private User owner;
 }

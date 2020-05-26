@@ -15,23 +15,30 @@ public class SimpleCORSFilter implements Filter {
 
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
         HttpServletResponse response = (HttpServletResponse) res;
-        response.setHeader("Access-Control-Allow-Origin", "*");
+        HttpServletRequest request = (HttpServletRequest) req;
+        if (request.getRequestURL().toString().contains("/gs-guide-websocket")) {
+            response.setHeader("Access-Control-Allow-Origin", "http://localhost:8081");
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+        }
+        else{
+            response.setHeader("Access-Control-Allow-Origin", "*");
+        }
         response.setHeader("Access-Control-Allow-Methods", "*");
         response.setHeader("Access-Control-Max-Age", "3600");
         response.setHeader("Access-Control-Allow-Headers", "*");
         req.setCharacterEncoding("UTF-8");
-        // response.setStatus(404);
-        if("OPTIONS".equalsIgnoreCase(((HttpServletRequest) req).getMethod())) {
+        if ("OPTIONS".equalsIgnoreCase(((HttpServletRequest) req).getMethod())) {
             response.setStatus(HttpServletResponse.SC_OK);
-        }
-        else {
+        } else {
 
             chain.doFilter(req, res);
         }
     }
 
-    public void init(FilterConfig filterConfig) {}
+    public void init(FilterConfig filterConfig) {
+    }
 
-    public void destroy() {}
+    public void destroy() {
+    }
 
 }

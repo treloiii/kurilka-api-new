@@ -11,6 +11,6 @@ import java.io.IOException;
 public class AccessDeniedNotFoundHandler implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, AccessDeniedException e) throws IOException, ServletException {
-        httpServletResponse.sendError(HttpServletResponse.SC_FORBIDDEN,"Page not found");
+        httpServletResponse.sendError(HttpServletResponse.SC_MOVED_PERMANENTLY,"Page not found");
     }
 }

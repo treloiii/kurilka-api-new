@@ -22,5 +22,6 @@ public class Dialog {
     @JsonView(View.MainInfo.class)
     private User companion;
     @OneToMany(mappedBy = "dialog")
+    @JsonView(View.FullInfo.class)
     private List<Message> messages;
 }
