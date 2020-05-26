@@ -17,6 +17,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.sql.Timestamp;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -50,6 +51,16 @@ public class MessageController {
                 dialog.setMessages(
                         dialog.getMessages().subList(0,1)
                 );
+        });
+        dialogs.sort((d1,d2)->{
+            try {
+                Message m1 = d1.getMessages().get(0);
+                Message m2 = d2.getMessages().get(0);
+                return m2.getTime().compareTo(m1.getTime());
+            }
+            catch (Exception e){
+                return 1;
+            }
         });
         return dialogs;
     }
