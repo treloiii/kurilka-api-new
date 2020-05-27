@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.trelloiii.kurilka2.views.View;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
@@ -14,6 +15,7 @@ import javax.persistence.Table;
 @Table(name = "usr")
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode(of={"id"})
 public class User {
     @Id
     @JsonView(View.MainInfo.class)

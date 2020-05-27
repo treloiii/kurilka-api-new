@@ -15,4 +15,7 @@ public interface DialogRepository extends JpaRepository<Dialog, Long> {
     List<Dialog> findByOwner(User owner);
     @Query("select d from Dialog d where (d.companion=?1 or d.owner=?1) and d.id=?2")
     Dialog findConcrete(User owner,Long id);
+
+    @Query("select d.id from Dialog d where ((d.companion=?1 and d.owner=?2) or (d.companion=?2 and d.owner=?1))")
+    Long findByOwnerOrCompanion(User companion,User owner);
 }

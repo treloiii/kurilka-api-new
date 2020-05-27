@@ -5,6 +5,7 @@ import com.trelloiii.kurilka2.model.Message;
 import com.trelloiii.kurilka2.model.User;
 import com.trelloiii.kurilka2.repository.DialogRepository;
 import com.trelloiii.kurilka2.repository.MessageRepository;
+import com.trelloiii.kurilka2.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,8 @@ public class DialogService {
     private DialogRepository dialogRepository;
     @Autowired
     private MessageRepository messageRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     public List<Dialog> findAllByOwner(User owner){
         List<Dialog> dialogs=dialogRepository.findByOwner(owner);
@@ -51,5 +54,27 @@ public class DialogService {
         message.setText(text);
         message.setTime(LocalDateTime.now());
         return messageRepository.save(message);
+    }
+    public Long findDialogWith(User user,User caller){
+        return dialogRepository.findByOwnerOrCompanion(user,caller);
+    }
+
+    public Message newDialog(User user, String opponentId, String message) {
+        User opponent=userRepository.findById(opponentId).orElseThrow(()->new RuntimeException("Opponent not found"));
+        Message messageNew=new Message();
+        messageNew.setTime(LocalDateTime.now());
+        messageNew.setOwner(user);
+        messageNew.setText(message);
+        Long dialogId=findDialogWith(opponent,user);
+        if(dialogId==null){
+            Dialog dialog=new Dialog();
+            dialog.setOwner(user);
+            dialog.setCompanion(opponent);
+            Dialog saved=dialogRepository.save(dialog);
+            messageNew.setDialog(saved);
+            return messageRepository.save(messageNew);
+        }
+        messageNew.setDialog(dialogRepository.findById(dialogId).orElseThrow(()->new RuntimeException("Dialog not found")));
+        return messageRepository.save(messageNew);
     }
 }

@@ -7,22 +7,16 @@ import com.trelloiii.kurilka2.dto.Payload;
 import com.trelloiii.kurilka2.model.Dialog;
 import com.trelloiii.kurilka2.model.Message;
 import com.trelloiii.kurilka2.model.User;
-import com.trelloiii.kurilka2.repository.UserRepository;
 import com.trelloiii.kurilka2.services.CustomUserDetailsService;
 import com.trelloiii.kurilka2.services.DialogService;
 import com.trelloiii.kurilka2.util.WsSender;
 import com.trelloiii.kurilka2.views.View;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.security.Principal;
-import java.sql.Timestamp;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/messages")
@@ -42,24 +36,49 @@ public class MessageController {
     @GetMapping
     @JsonView(View.FullInfo.class)
     public List<Dialog> get(Principal principal){
-        User user=userService.findByUsername(principal.getName());
+        User user=principal(principal);
         return dialogService.findAllByOwner(user);
     }
 
     @GetMapping
     @RequestMapping("{id}")
     public Dialog oneDialog(Principal principal,@PathVariable Long id){
-        User user=userService.findByUsername(principal.getName());
+        User user=principal(principal);
         return dialogService.findOne(user,id);
     }
     @PostMapping
     public Message saveMessage(Principal principal,
                                @RequestParam String text,
                                @RequestParam Long id){
-        User user=userService.findByUsername(principal.getName());
+        User user=principal(principal);
         Message message=dialogService.saveMessage(user,text,id);
-        sender.accept(EventType.SEND,new Payload<>(message,message.getDialog().getCompanion().getId()));
-        sender.accept(EventType.SEND,new Payload<>(message,message.getDialog().getOwner().getId()));
+        sendWs(EventType.SEND,message);
         return message;
+    }
+    @PostMapping("/with")
+    public Long findWith(@RequestBody User user,Principal principal){
+        User caller=principal(principal);
+        Long id= dialogService.findDialogWith(user,caller);
+        return id==null?-1:id;
+    }
+    @PostMapping("/dialog")
+    public ResponseEntity<?> newDialog(@RequestParam String opponentId,
+                                    @RequestParam String message,
+                                    Principal principal){
+        User user=principal(principal);
+        Message messageNew=dialogService.newDialog(user,opponentId,message);
+        sendWs(EventType.DIALOG,messageNew);
+        return ResponseEntity.ok(messageNew.getDialog().getId());
+    }
+
+    private User principal(Principal principal){
+        return userService.findByUsername(principal.getName());
+    }
+    private void sendWs(EventType eventType,Message message){
+        Dialog d=message.getDialog();
+        if(!d.getCompanion().equals(d.getOwner())){
+            sender.accept(eventType,new Payload<>(message,message.getDialog().getCompanion().getId()));
+        }
+        sender.accept(eventType,new Payload<>(message,message.getDialog().getOwner().getId()));
     }
 }
