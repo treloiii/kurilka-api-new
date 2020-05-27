@@ -43,26 +43,7 @@ public class MessageController {
     @JsonView(View.FullInfo.class)
     public List<Dialog> get(Principal principal){
         User user=userService.findByUsername(principal.getName());
-        List<Dialog> dialogs= dialogService.findAllByOwner(user);
-        dialogs.forEach(dialog -> {
-            dialog.getMessages()
-                    .sort((m1, m2) -> (int) (m2.getId()-m1.getId()));
-            if(dialog.getMessages().size()>1)
-                dialog.setMessages(
-                        dialog.getMessages().subList(0,1)
-                );
-        });
-        dialogs.sort((d1,d2)->{
-            try {
-                Message m1 = d1.getMessages().get(0);
-                Message m2 = d2.getMessages().get(0);
-                return m2.getTime().compareTo(m1.getTime());
-            }
-            catch (Exception e){
-                return 1;
-            }
-        });
-        return dialogs;
+        return dialogService.findAllByOwner(user);
     }
 
     @GetMapping
