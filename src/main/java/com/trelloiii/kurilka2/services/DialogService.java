@@ -7,6 +7,7 @@ import com.trelloiii.kurilka2.repository.DialogRepository;
 import com.trelloiii.kurilka2.repository.MessageRepository;
 import com.trelloiii.kurilka2.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -39,8 +40,12 @@ public class DialogService {
         return dialogs;
     }
 
-    public Dialog findOne(User owner,Long id){
-        return dialogRepository.findConcrete(owner, id);
+    public Dialog findOne(User owner, Long id, Pageable pageable){
+        Dialog dialog= dialogRepository.findConcrete(owner, id);
+        List<Message> messages=messageRepository.findByDialog(dialog,pageable);
+        messages.sort((m1,m2)->m1.getTime().compareTo(m2.getTime()));
+        dialog.setMessages(messages);
+        return dialog;
     }
 
     public Message saveMessage(User user, String text, Long id) {

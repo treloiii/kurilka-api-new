@@ -12,6 +12,9 @@ import com.trelloiii.kurilka2.services.DialogService;
 import com.trelloiii.kurilka2.util.WsSender;
 import com.trelloiii.kurilka2.views.View;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
@@ -25,6 +28,7 @@ public class MessageController {
     private final CustomUserDetailsService userService;
     private final DialogService dialogService;
     private final BiConsumer<EventType, Payload<Message>> sender;
+    private final int MESSAGE_PER_PAGE=30;
 
     @Autowired
     public MessageController(CustomUserDetailsService userService, DialogService dialogService, WsSender sender) {
@@ -42,9 +46,14 @@ public class MessageController {
 
     @GetMapping
     @RequestMapping("{id}")
-    public Dialog oneDialog(Principal principal,@PathVariable Long id){
+    public Dialog oneDialog(Principal principal,
+                            @PathVariable Long id,
+                            @PageableDefault(
+                                    size = MESSAGE_PER_PAGE, sort = {"id"},
+                                    direction = Sort.Direction.DESC
+                            ) Pageable pageable){
         User user=principal(principal);
-        return dialogService.findOne(user,id);
+        return dialogService.findOne(user,id,pageable);
     }
     @PostMapping
     public Message saveMessage(Principal principal,
