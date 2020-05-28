@@ -1,5 +1,5 @@
 package com.trelloiii.kurilka2.model;
-import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.annotation.*;
 import com.trelloiii.kurilka2.views.View;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,6 +8,7 @@ import org.hibernate.jpa.QueryHints;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
@@ -15,23 +16,24 @@ import java.util.List;
 public class Dialog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonView(View.MainInfo.class)
+    @JsonView(View.Id.class)
     private Long id;
-    @ManyToOne
-    @JoinColumn(name = "owner_id")
+//    @ManyToOne
+//    @JoinColumn(name = "owner_id")
+//    @JsonView(View.MainInfo.class)
+//    private User owner;
+//    @OneToMany(mappedBy = "dialog")
+//    @JsonView(View.MainInfo.class)
+//    private List<User> companion;
+    @ManyToMany(mappedBy = "dialogs")
     @JsonView(View.MainInfo.class)
-    private User owner;
-    @ManyToOne
-    @JoinColumn(name = "companion_id")
-    @JsonView(View.MainInfo.class)
-    private User companion;
+    private Set<User> users;
+
+
     @OneToMany(mappedBy = "dialog")
-    @JsonView(View.FullInfo.class)
-    @BatchSize(size = 1)
+    @JsonView(View.MainInfo.class)
     private List<Message> messages;
-    public Dialog(long id,User owner,User companion){
-        this.id=id;
-        this.owner=owner;
-        this.companion=companion;
-    }
+
+    @JsonView(View.MainInfo.class)
+    private String name;
 }

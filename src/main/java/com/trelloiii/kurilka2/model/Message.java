@@ -13,20 +13,28 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonView(View.MainInfo.class)
     private Long id;
+
+
     @ManyToOne
     @JoinColumn(name = "dialog_id")
-    @JsonView(View.MainInfo.class)
+    @JsonView(View.Id.class)
     @JsonIdentityReference
     @JsonIdentityInfo(
             property = "id",
             generator = ObjectIdGenerators.PropertyGenerator.class
     )
     private Dialog dialog;
+
+
     @JsonView(View.MainInfo.class)
     private String text;
+
+
     @JsonView(View.MainInfo.class)
     @JsonFormat(shape = JsonFormat.Shape.STRING,pattern = "HH:mm")
     private LocalDateTime time;
+
+
     @ManyToOne
     @JoinColumn(name = "owner_id")
     @JsonView(View.MainInfo.class)

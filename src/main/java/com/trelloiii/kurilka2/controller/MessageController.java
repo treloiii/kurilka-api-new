@@ -1,6 +1,7 @@
 package com.trelloiii.kurilka2.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.trelloiii.kurilka2.dto.DialogWrapper;
 import com.trelloiii.kurilka2.dto.EventType;
 import com.trelloiii.kurilka2.dto.ObjectType;
 import com.trelloiii.kurilka2.dto.Payload;
@@ -18,7 +19,9 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
 @RestController
@@ -38,23 +41,30 @@ public class MessageController {
     }
 
     @GetMapping
-    @JsonView(View.FullInfo.class)
-    public List<Dialog> get(Principal principal){
+    @JsonView(View.MainInfo.class)
+    public List<DialogWrapper> get(Principal principal){
         User user=principal(principal);
-        return dialogService.findAllByOwner(user);
+        List<DialogWrapper> dialogWrappers=new ArrayList<>();
+        dialogService.findAllByOwner(user)
+                .forEach(
+                        d->dialogWrappers.add(new DialogWrapper(d))
+                );
+        return dialogWrappers;
     }
 
     @GetMapping
     @RequestMapping("{id}")
-    public Dialog oneDialog(Principal principal,
-                            @PathVariable Long id,
-                            @PageableDefault(
+    @JsonView(View.MainInfo.class)
+    public DialogWrapper oneDialog(Principal principal,
+                                   @PathVariable Long id,
+                                   @PageableDefault(
                                     size = MESSAGE_PER_PAGE, sort = {"id"},
                                     direction = Sort.Direction.DESC
                             ) Pageable pageable){
         User user=principal(principal);
-        return dialogService.findOne(user,id,pageable);
+        return new DialogWrapper(dialogService.findOne(user,id,pageable));
     }
+
     @PostMapping
     public Message saveMessage(Principal principal,
                                @RequestParam String text,
@@ -64,6 +74,7 @@ public class MessageController {
         sendWs(EventType.SEND,message);
         return message;
     }
+
     @PostMapping("/with")
     public Long findWith(@RequestBody User user,Principal principal){
         User caller=principal(principal);
@@ -79,15 +90,28 @@ public class MessageController {
         sendWs(EventType.DIALOG,messageNew);
         return ResponseEntity.ok(messageNew.getDialog().getId());
     }
+    @PostMapping("/group")
+    public ResponseEntity<?> newGroup(@RequestParam Set<String> usersId,
+                                       @RequestParam String groupName,
+                                       @RequestParam String message,
+                                       Principal principal){
+        User user=principal(principal);
+        Message messageNew=dialogService.newGroupChat(user,usersId,message,groupName);
+        sendWs(EventType.DIALOG,messageNew);
+        return ResponseEntity.ok(messageNew.getDialog().getId());
+    }
 
     private User principal(Principal principal){
         return userService.findByUsername(principal.getName());
     }
     private void sendWs(EventType eventType,Message message){
         Dialog d=message.getDialog();
-        if(!d.getCompanion().equals(d.getOwner())){
-            sender.accept(eventType,new Payload<>(message,message.getDialog().getCompanion().getId()));
-        }
-        sender.accept(eventType,new Payload<>(message,message.getDialog().getOwner().getId()));
+//        if(!d.getCompanion().equals(d.getOwner())){
+//            sender.accept(eventType,new Payload<>(message,message.getDialog().getCompanion().getId()));
+//        }
+//        sender.accept(eventType,new Payload<>(message,message.getDialog().getOwner().getId()));
+        d.getUsers().forEach(user->{
+            sender.accept(eventType,new Payload<>(message,user.getId()));
+        });
     }
 }
